@@ -55,15 +55,24 @@ def get_MostActiveData(htmlFile, outFile, fcount, values):
         result = prog.findall(string[i])
         values.append(result[1])
 
-        # FOR ID RESULTS
-        #result2 = prog2.findall(string[i])
-        #tag.append(result2[0])
-
-        # with open(outFile,'a') as fd:
-        #     fd.write(tag[i])
-        #     fd.write(":  ")
-        #     fd.write(output[i])
-        #     fd.write("\n")
+def get_CurrentPrice(htmlFile, outFile, fcount, values):
+    string = []
+    with open(htmlFile) as my_file:
+        string = my_file.readlines()
+    
+    #'(?<=>)(-?\w\s?\.?)*'
+    prog = re.compile('>(.*?)<')
+    prog2 = re.compile('aria-label=\"(.*?)\"')
+    
+    with open(outFile, "w") as fo:
+        fo.truncate()
+    
+    for i in range(fcount):
+        # FOR VALUES
+        result = prog.findall(string[i])
+        if i == 3:
+            values.append(result[1])
+        
 
 def file_len(fname):
     with open(fname) as f:
@@ -98,45 +107,12 @@ def stock_amount(file, array):
         for row in reader:
             array.append(Stock(row[0], row[1], row[2], row[3], row[4], row[5]))
 
-# def purchase_stock(buyAmount, end, boughtStock, priceStock, amountStock, tempbal, sell):
-#     place = 0
-#     while end < amountStock:
-#         tbal = float(my_list[1].b)
-#         tprice = float(price[place])
-#         am = amount(tbal, tprice, buyAmount)
-#         if am >= 1:
-#             bought = Buy(tbal,tprice,am, buyAmount)
-#             bal = bought.myfunc()
-#             tempbal -= bal
-#             boughtStock.append(symbols[place])
-#             priceStock.append(float(price[place]) * am)
-#             amountStock.append(am)
-#             end += 1
-#         place += 1
-#     return tempbal
-
-# def purchase_stock2(buyAmount, end, boughtStock, priceStock, amountStock, tempbal, sell):
-#     place = 0
-#     while end < amountStock:
-#         tbal = float(my_list[2].b)
-#         tprice = float(price2[place])
-#         am = amount(tbal, tprice, buyAmount)
-#         if am >= 1:
-#             bought = Buy(tbal,tprice,am, buyAmount)
-#             bal = bought.myfunc()
-#             tempbal -= bal
-#             boughtStock.append(symbols2[place])
-#             priceStock.append(float(price2[place]) * am)
-#             amountStock.append(am)
-#             end += 1
-#         place += 1
-#     return tempbal
 
 def sell_stock(sell, percentDiff, cPrice, bought):
     for i in range(5):
         percentDiff.append(((cPrice[i] - bought[i]) / ((bought[i] + cPrice[i]) / 2)) * 100)
         rounded = float(round(percentDiff[i], 2))
-        if rounded >= 5 or rounded <= -15:
+        if rounded >= 0 or rounded <= -15:
             sell.append(1)
         else:
             sell.append(0)
@@ -242,7 +218,22 @@ def bought_it(a, bal, price):
         if holdbal > price:
             holdbal -= price
         i += 1
-    return float(holdbal) 
+    return float(holdbal)
+
+def get_cp(num):
+    if num == 0:
+        return cp1
+    elif num == 1:
+        return cp2
+    elif num == 2:
+        return cp3
+    elif num == 3:
+        return cp4
+    elif num == 4:
+        return cp5
+    
+    
+     
 
 # my_list=[]
 # with open('test.csv', 'r') as f:
@@ -259,11 +250,7 @@ tag1 = 'tr'
 tag2 = 'td'
 
 
-
-
 # START OF THE FIRST PERSON #
-
-
 fileCount = get_YahooStock("https://finance.yahoo.com/most-active", tag1, tag2, htmlFile)
 
 values = []
@@ -292,14 +279,20 @@ for rows in records:
 # tickerSymbols = [own_symbols[0], own_symbols[1], own_symbols[2], own_symbols[3], own_symbols[4]]
 # get_StockData(tickerSymbols)
 
-stock_list = []
-for tot in range(5):
-    with open(own_symbols[tot] + ".csv", 'r') as f:
-        lines = f.readlines()
-        stock_list.append(lines[1].split(",")[1])
+files = []
+values2 = []
+for x in range(5):
+    files.append("https://finance.yahoo.com/quote/" + own_symbols[x])
+    get_YahooStock(files[x], tag1, tag2, "lookup.html")
+    get_CurrentPrice("lookup.html", outFile, 4, values2)
 
+cp1 = values2[0]
+cp2 = values2[1]
+cp3 = values2[2]
+cp4 = values2[3]
+cp5 = values2[4]
 
-# print(Stock_list[0].split(",")[1])
+# print(values2[0].split(",")[1])
 buyAmount = 5
 end = 0
 boughtStock = []
@@ -315,20 +308,21 @@ total = grab_sqlinfo(query1)
 
 sell = []
 percentDiff = []
-cPrice = [float(stock_list[0]) * stock_Amount[0], float(stock_list[1]) * stock_Amount[1], float(stock_list[2]) * stock_Amount[2], float(stock_list[3]) * stock_Amount[3], float(stock_list[4]) * stock_Amount[4]]
+cPrice = [float(values2[0]) * stock_Amount[0], float(values2[1]) * stock_Amount[1], float(values2[2]) * stock_Amount[2], float(values2[3]) * stock_Amount[3], float(values2[4]) * stock_Amount[4]]
 
 for t in total:
     bought.append(t[0])
 
 sell_stock(sell, percentDiff, cPrice, bought)
 
-amountToBuy = sell.count(1)
 
+amountToBuy = sell.count(1)
+sell = [1,0,1,0,1]
 num = 0
 while end < amountToBuy:
     newBal = 0
     if(sell[num] == 1):
-        newBal = (float(stock_list[num]) * stock_Amount[num]) + bal[num]
+        newBal = cPrice[num] + bal[num]
         tprice = float(price[num])
         am = amount(newBal, tprice)
         if am >= 1:
@@ -339,6 +333,9 @@ while end < amountToBuy:
             sql = "INSERT INTO person1 (balance, stockname, price, amount) VALUES (%s, %s, %s, %s)"
             val = (str(newBal), str(symbols[num]), str(tprice), str(am))
             insert_sqlinfo(sql, val)
+            sql1 = "INSERT INTO purchased (stockname, price, amount) VALUES (%s, %s, %s)"
+            val1 = (str(symbols[num]), str(tprice), str(am))
+            insert_sqlinfo(sql1, val1)
             end += 1
         else:
             num += 1
@@ -369,7 +366,7 @@ while end < amountToBuy:
 # sell1 = []
 # percentDiff1 = []
 # bought1 = [float(my_list[2].P1), float(my_list[2].P2), float(my_list[2].P3), float(my_list[2].P4), float(my_list[2].P5)]
-# cPrice1 = [float(stock_list1[2].open) * float(my_list[2].A1), float(stock_list2[2].open) * float(my_list[2].A2), float(stock_list3[2].open) * float(my_list[2].A3), float(stock_list4[2].open) * float(my_list[2].A4), float(stock_list5[2].open) * float(my_list[2].A5)]
+# cPrice1 = [float(values21[2].open) * float(my_list[2].A1), float(values22[2].open) * float(my_list[2].A2), float(values23[2].open) * float(my_list[2].A3), float(values24[2].open) * float(my_list[2].A4), float(values25[2].open) * float(my_list[2].A5)]
 
 # sell_stock(sell1, percentDiff1, cPrice1, bought1)
 # amount1 = sell1.count(1)
