@@ -232,15 +232,24 @@ def get_cp(num):
     elif num == 4:
         return cp5
     
-    
+def purchase(sell, num, price, symbols, ids, bal):
+    newBal = 0
+    if(sell[num] == 1):
+        newBal = cPrice[num] + bal[num]
+        tprice = float(price[num])
+        am = amount(newBal, tprice)
+        if am >= 1:
+            bal = bought_it(am, newBal, tprice)
+            newBal -= bal
+            sql1 = "DELETE FROM person1 WHERE Id = " + str(ids[num])
+            delete_sqlinfo(sql1)
+            sql = "INSERT INTO person1 (balance, stockname, price, amount) VALUES (%s, %s, %s, %s)"
+            val = (str(newBal), str(symbols[num]), str(tprice), str(am))
+            insert_sqlinfo(sql, val)
+            sql1 = "INSERT INTO purchased (stockname, price, amount) VALUES (%s, %s, %s)"
+            val1 = (str(symbols[num]), str(tprice), str(am))
+            insert_sqlinfo(sql1, val1)    
      
-
-# my_list=[]
-# with open('test.csv', 'r') as f:
-#     reader = csv.reader(f)
-#     for row in reader:
-#         my_list.append(Person(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12],row[13],row[14],row[15],row[16],row[17]))
-
 
 htmlFile = "trending.html"
 htmlFile2 = "gainer.html"
@@ -317,29 +326,14 @@ sell_stock(sell, percentDiff, cPrice, bought)
 
 
 amountToBuy = sell.count(1)
-sell = [1,0,1,0,1]
 num = 0
-while end < amountToBuy:
-    newBal = 0
-    if(sell[num] == 1):
-        newBal = cPrice[num] + bal[num]
-        tprice = float(price[num])
-        am = amount(newBal, tprice)
-        if am >= 1:
-            bal = bought_it(am, newBal, tprice)
-            newBal -= bal
-            sql1 = "DELETE FROM person1 WHERE Id = " + str(ids[num])
-            delete_sqlinfo(sql1)
-            sql = "INSERT INTO person1 (balance, stockname, price, amount) VALUES (%s, %s, %s, %s)"
-            val = (str(newBal), str(symbols[num]), str(tprice), str(am))
-            insert_sqlinfo(sql, val)
-            sql1 = "INSERT INTO purchased (stockname, price, amount) VALUES (%s, %s, %s)"
-            val1 = (str(symbols[num]), str(tprice), str(am))
-            insert_sqlinfo(sql1, val1)
-            end += 1
-        else:
-            num += 1
-    num += 1
+
+purchase(sell, 0, price, symbols, ids, bal)
+purchase(sell, 1, price, symbols, ids, bal)
+purchase(sell, 2, price, symbols, ids, bal)
+purchase(sell, 3, price, symbols, ids, bal)
+purchase(sell, 4, price, symbols, ids, bal)
+
 
 # amount = sell.count(1)
 # new_balance = purchase_stock(buyAmount, end, boughtStock, priceStock, amount, tempbal, sell)
