@@ -1,19 +1,26 @@
-import math
+from bs4 import BeautifulSoup
+import json
+import re
+import requests
 
-class Buy:
-  def __init__(self, bal, price, amount):
-    self.b = bal
-    self.p = price
-    self.a = amount
 
-  def myfunc(self):
-    i = 0
-    while i < self.a:
-        if self.b > self.p:
-            self.b -= self.p
-        i += 1
-    return int(self.b)
 
-pd = Buy(1000.00,25,1)
-a = pd.myfunc()
-print(a)
+
+def get_Current_Stock_Price(url, file):
+  r = requests.get(url)
+  with open(file, 'wb') as f:
+      f.write(r.content)
+
+  pattern = re.compile("\"price\": \"(.*?)\"")
+  textfile = open(file, 'r')
+  matches = []
+  for line in textfile:
+      matches += pattern.findall(line)
+  textfile.close()
+  return matches
+
+url = 'https://markets.businessinsider.com/stocks/f-stock'
+file = 'stock.html'
+ans = get_Current_Stock_Price(url, file)
+print(ans[0])
+
