@@ -100,7 +100,10 @@ def amount(balance, price):
     iBal = balance
     temp = math.floor(iBal) / price
     amount = math.floor(temp)
-    return amount
+    purchased = amount * price
+    return purchased, amount
+    
+    
 
  
 def sell_stock(sell, percentDiff, cPrice, bought):
@@ -169,9 +172,8 @@ def purchase(sell, num, price, symbols, ids, bal, pTime):
     if(sell[num] == 1):
         newBal = cPrice[num] + bal[num]
         tprice = float(price[num])
-        am = amount(newBal, tprice)
-        if am >= 1:
-            bought_total = bought_it(am, newBal, tprice)
+        bought_total, am = amount(newBal, tprice)
+        if am > 0:
             newBal -= bought_total
             sql1 = "DELETE FROM person1 WHERE Id = " + str(ids[num])
             delete_sqlinfo(sql1)
@@ -216,7 +218,7 @@ get_MostActiveData(htmlFile, outFile, fileCount, values)
 
 symbols = values[::10]
 price = values[2::10]
-change = values[4::10]
+change = values[3::10]
 
 # GRABS ALL CURRENT STOCK OWNED AND ALL THE ATTRIBUTES #
 query = "select * from Person1"
@@ -262,14 +264,19 @@ for t in total:
 
 sell_stock(sell, percentDiff, cPrice, bought)
 amountToBuy = sell.count(1)
-num = 0
+
+stocks_to_buy = []
+new_symbols = []
+for ch in range(len(price)):
+    if float(change[ch]) > 0 and float(price[ch]) < 200:
+        stocks_to_buy.append(price[ch])
+        new_symbols.append(symbols[ch])
 
 # PURCHASE STOCK IF NEED BE #
-purchase(sell, 0, price, symbols, ids, bal, current_start)
-purchase(sell, 1, price, symbols, ids, bal, current_start)
-purchase(sell, 2, price, symbols, ids, bal, current_start)
-purchase(sell, 3, price, symbols, ids, bal, current_start)
-purchase(sell, 4, price, symbols, ids, bal, current_start)
+for k in range(len(sell)):
+    if sell[k] == 1:
+        purchase(sell, k, stocks_to_buy, new_symbols, ids, bal, current_start)
+
 
 # USED FOR LOGGING THE CURRENT TIME OF PROGRAM #
 endTime = datetime.now()
