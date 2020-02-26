@@ -110,7 +110,7 @@ def sell_stock(sell, percentDiff, cPrice, bought):
     for i in range(5):
         percentDiff.append(((cPrice[i] - bought[i]) / ((bought[i] + cPrice[i]) / 2)) * 100)
         rounded = float(round(percentDiff[i], 2))
-        if rounded >= 2 or rounded <= -10:
+        if rounded >= 1 or rounded <= -10:
             sell.append(1)
         else:
             sell.append(0)
@@ -177,6 +177,7 @@ def purchase(sell, num, price, symbols, ids, bal, pTime):
             newBal -= bought_total
             sql1 = "DELETE FROM person1 WHERE Id = " + str(ids[num])
             delete_sqlinfo(sql1)
+            print("purchasing: " + str(symbols[num]) + " Price: " + str(tprice) + " Amount: " + str(am))
             sql = "INSERT INTO person1 (balance, stockname, price, amount) VALUES (%s, %s, %s, %s)"
             val = (str(newBal), str(symbols[num]), str(tprice), str(am))
             insert_sqlinfo(sql, val)
@@ -274,6 +275,7 @@ for ch in range(len(price)):
 
 # PURCHASE STOCK IF NEED BE #
 for k in range(len(sell)):
+    print("stock: " + str(own_symbols[k]) + " percentDiff: " + str(percentDiff[k]))
     if sell[k] == 1:
         purchase(sell, k, stocks_to_buy, new_symbols, ids, bal, current_start)
 
